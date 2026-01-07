@@ -41,16 +41,21 @@ function updateAll() {
 
   updateAthleteOptions(dataStore.filteredData);
 
-  // overview
+  // overview (HEATMAP = SOLO filtri globali)
   drawHeatmap(dataStore.filteredData, {
-    onCellFilter: ({ year, apparatus }) => {
+    onPickCell: ({ year, apparatus }) => {
       state.year = year;
       state.apparatus = apparatus;
-      setSelectValuesFromState();
+
+      // sync UI (usa window.d3 perché d3 non è importato)
+      window.d3.select("#yearSelect").property("value", year);
+      window.d3.select("#apparatusSelect").property("value", apparatus);
+
       updateAll();
     }
   });
 
+  // PCA usa global filtered
   dataStore.pcaPoints = computePCA(dataStore.filteredData, ["Dscore", "Escore", "FinalScore", "Penalties"]);
   drawPCA(dataStore.pcaPoints, {
     onSelectAthlete: (athlete) => {

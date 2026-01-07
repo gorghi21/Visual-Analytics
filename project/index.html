@@ -44,6 +44,15 @@
       <div class="card-header">
         <div class="card-title">FinalScore Trend</div>
         <div class="card-note">By competition/event • reacts to selection/brush</div>
+        <div class="legend-timeline">
+          <span class="lg">
+            <span class="swatch wc"></span> World Championships
+          </span>
+          <span class="lg">
+            <span class="swatch ec"></span> European Championships
+          </span>
+          <span class="note">Band = min–max • Line = mean</span>
+        </div>
       </div>
       <svg id="timeline" width="700" height="420"></svg>
     </div>
@@ -52,6 +61,15 @@
       <div class="card-header">
         <div class="card-title">Apparatus × Year Heatmap</div>
         <div class="card-note">Color = Avg FinalScore • Click a cell to filter</div>
+
+        <div class="legend-heatmap">
+          <span class="legend-label">Avg FinalScore</span>
+          <div class="legend-bar"></div>
+          <div class="legend-range">
+            <span id="hmMin">–</span>
+            <span id="hmMax">–</span>
+          </div>
+        </div>
       </div>
       <svg id="heatmap" width="700" height="420"></svg>
     </div>

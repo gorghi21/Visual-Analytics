@@ -5,14 +5,16 @@ import { setHighlightedCompetition } from "../highlight.js";
 
 function getSvgSize(svgSel, fallbackW = 700, fallbackH = 420) {
   const node = svgSel.node();
-  if (!node) return { w: fallbackW, h: fallbackH };
+  const attrW = +svgSel.attr("width") || fallbackW;
+  const attrH = +svgSel.attr("height") || fallbackH;
+  if (!node) return { w: attrW, h: attrH };
 
   const r = node.getBoundingClientRect();
-  const w = Math.max(1, Math.floor(r.width || fallbackW));
-  const h = Math.max(1, Math.floor(r.height || fallbackH));
+  const w = (r.width && r.width > 50) ? Math.floor(r.width) : attrW;
+  const h = (r.height && r.height > 50) ? Math.floor(r.height) : attrH;
 
-  // Sync attrs so D3 scales use correct numbers
   svgSel.attr("width", w).attr("height", h);
+  svgSel.attr("viewBox", `0 0 ${w} ${h}`);
   return { w, h };
 }
 
@@ -23,10 +25,7 @@ export function drawScatter(data, { onSelectAthlete }) {
   svg.selectAll("*").remove();
 
   if (!data || data.length === 0) {
-    svg.append("text")
-      .attr("x", 20).attr("y", 30)
-      .attr("fill", "#6f6f6f")
-      .text("Scatter: no data");
+    svg.append("text").attr("x", 20).attr("y", 30).attr("fill", "#6f6f6f").text("Scatter: no data");
     return;
   }
 
@@ -48,7 +47,6 @@ export function drawScatter(data, { onSelectAthlete }) {
     .domain(["Y", "N", "R"])
     .range(["#2ca02c", "#d62728", "#1f77b4"]);
 
-  // clip inside plot (not including hover overflow)
   svg.append("defs").append("clipPath")
     .attr("id", "clipScatter")
     .append("rect")
@@ -57,7 +55,6 @@ export function drawScatter(data, { onSelectAthlete }) {
     .attr("width", w - margin.left - margin.right)
     .attr("height", h - margin.top - margin.bottom);
 
-  // axes
   svg.append("g")
     .attr("transform", `translate(0,${h - margin.bottom})`)
     .call(d3.axisBottom(x));
@@ -66,19 +63,16 @@ export function drawScatter(data, { onSelectAthlete }) {
     .attr("transform", `translate(${margin.left},0)`)
     .call(d3.axisLeft(y));
 
-  // light Y grid
   svg.append("g")
     .attr("transform", `translate(${margin.left},0)`)
     .call(d3.axisLeft(y).tickSize(-(w - margin.left - margin.right)).tickFormat(""))
     .call(g => g.selectAll("line").attr("stroke", "#eee7dd"))
     .call(g => g.select(".domain").remove());
 
-  // axis styling
   svg.selectAll(".domain").attr("stroke", "#cfc7bb");
   svg.selectAll(".tick line").attr("stroke", "#e6dfd5");
   svg.selectAll(".tick text").attr("fill", "#6f6f6f");
 
-  // labels
   svg.append("text")
     .attr("x", w / 2)
     .attr("y", h - 5)
@@ -95,7 +89,7 @@ export function drawScatter(data, { onSelectAthlete }) {
   const gPoints = svg.append("g").attr("clip-path", "url(#clipScatter)");
 
   gPoints.selectAll("circle")
-    .data(data, d => d.__id ?? `${d.Athlete}|${d.Event}|${d.Apparatus}|${d.Year}|${d.FinalScore}`)
+    .data(data, d => d.__id ?? `${d.Athlete}|${d.EventDate}|${d.Apparatus}|${d.Competition}|${d.FinalScore}`)
     .enter()
     .append("circle")
     .attr("class", "scatterPoint")

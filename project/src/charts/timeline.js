@@ -3,40 +3,49 @@ import { state } from "../state.js";
 import { showTooltip, moveTooltip, hideTooltip, fmt } from "../tooltip.js";
 import { setHighlightedCompetition } from "../highlight.js";
 
+const EVENT_DATE = {
+  "liverpool": "2022-11-05",
+  "munich":   "2022-08-18",
+  "antalya":  "2023-04-11",
+  "antwerp":  "2023-09-30",
+  "rimini":   "2024-04-24"
+};
+
 function getSvgSize(svgSel, fallbackW = 700, fallbackH = 420) {
   const node = svgSel.node();
-  if (!node) return { w: fallbackW, h: fallbackH };
+  const attrW = +svgSel.attr("width") || fallbackW;
+  const attrH = +svgSel.attr("height") || fallbackH;
+  if (!node) return { w: attrW, h: attrH };
 
   const r = node.getBoundingClientRect();
-  const w = Math.max(1, Math.floor(r.width || fallbackW));
-  const h = Math.max(1, Math.floor(r.height || fallbackH));
+  const w = (r.width && r.width > 50) ? Math.floor(r.width) : attrW;
+  const h = (r.height && r.height > 50) ? Math.floor(r.height) : attrH;
 
   svgSel.attr("width", w).attr("height", h);
+  svgSel.attr("viewBox", `0 0 ${w} ${h}`);
   return { w, h };
 }
 
-// Robust parse for EventDate values like "05/11/2022" (dd/mm/yyyy) or ISO.
-function parseEventDateValue(v) {
-  if (v === null || v === undefined) return null;
-  const s = String(v).trim();
-  if (!s) return null;
-
-  // ISO or something JS can parse reliably
-  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+function parseEventDate(row) {
+  // Preferisci EventDate del dataset (DD/MM/YYYY o YYYY-MM-DD). Fallback su mappa.
+  const raw = row?.EventDate;
+  if (raw) {
+    const s = String(raw).trim();
+    // DD/MM/YYYY
+    const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
+    // YYYY-MM-DD
     const d = new Date(s);
-    return Number.isFinite(+d) ? d : null;
+    if (!Number.isNaN(d.getTime())) return d;
   }
 
-  // dd/mm/yyyy or dd-mm-yyyy
-  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if (m) {
-    const dd = Number(m[1]), mm = Number(m[2]), yy = Number(m[3]);
-    const d = new Date(yy, mm - 1, dd);
-    return Number.isFinite(+d) ? d : null;
+  const name = (row?.Event ?? "").toLowerCase();
+  for (const k of Object.keys(EVENT_DATE)) {
+    if (name.includes(k)) return new Date(EVENT_DATE[k] + "T00:00:00");
   }
-
-  const d = new Date(s);
-  return Number.isFinite(+d) ? d : null;
+  // fallback: 1 luglio dell'anno
+  const y = Number(row?.Year);
+  return Number.isFinite(y) ? new Date(`${y}-07-01T00:00:00`) : null;
 }
 
 function shortEvent(s) {
@@ -55,18 +64,9 @@ export function drawTimeline(data) {
   const svg = d3.select("#timeline");
   svg.selectAll("*").remove();
 
-  // base filter
-  let base = (data || []).filter(d => Number.isFinite(d.Year) && Number.isFinite(d.FinalScore));
-  if (state.selected?.Athlete) base = base.filter(d => d.Athlete === state.selected.Athlete);
-
-  // require valid EventDate
-  base = base.filter(d => parseEventDateValue(d.EventDate));
-
+  const base = (data || []).filter(d => Number.isFinite(d.Year) && Number.isFinite(d.FinalScore));
   if (base.length === 0) {
-    svg.append("text")
-      .attr("x", 20).attr("y", 30)
-      .attr("fill", "#6f6f6f")
-      .text("Timeline: no data (missing/invalid EventDate)");
+    svg.append("text").attr("x", 20).attr("y", 30).attr("fill", "#6f6f6f").text("Timeline: no data");
     return;
   }
 
@@ -76,21 +76,16 @@ export function drawTimeline(data) {
   const r = 5;
   const rHover = 7;
 
-  // aggregate by (Competition, Event) and use mean/min/max + date
+  // aggrega per (Competition, Event)
   const rolled = d3.rollups(
     base,
-    v => {
-      const date = parseEventDateValue(v[0].EventDate);
-      return {
-        mean: d3.mean(v, d => d.FinalScore),
-        min: d3.min(v, d => d.FinalScore),
-        max: d3.max(v, d => d.FinalScore),
-        n: v.length,
-        date,
-        event: v[0].Event,
-        comp: v[0].Competition
-      };
-    },
+    v => ({
+      mean: d3.mean(v, d => d.FinalScore),
+      min: d3.min(v, d => d.FinalScore),
+      max: d3.max(v, d => d.FinalScore),
+      n: v.length,
+      sample: v[0]
+    }),
     d => d.Competition,
     d => d.Event
   );
@@ -98,11 +93,12 @@ export function drawTimeline(data) {
   const points = [];
   for (const [comp, byEvent] of rolled) {
     for (const [event, agg] of byEvent) {
-      if (!agg.date || !Number.isFinite(+agg.date)) continue;
+      const date = parseEventDate(agg.sample);
+      if (!date || Number.isNaN(date.getTime())) continue;
       points.push({
         comp,
         event,
-        date: agg.date,
+        date,
         mean: agg.mean,
         min: agg.min,
         max: agg.max,
@@ -111,15 +107,13 @@ export function drawTimeline(data) {
     }
   }
 
-  points.sort((a, b) => a.date - b.date);
-
   if (points.length === 0) {
-    svg.append("text")
-      .attr("x", 20).attr("y", 30)
-      .attr("fill", "#6f6f6f")
-      .text("Timeline: no points after aggregation");
+    svg.append("text").attr("x", 20).attr("y", 30).attr("fill", "#6f6f6f")
+      .text("Timeline: no data (missing/invalid EventDate)");
     return;
   }
+
+  points.sort((a, b) => a.date - b.date);
 
   const x = d3.scaleTime()
     .domain(d3.extent(points, d => d.date))
@@ -134,7 +128,7 @@ export function drawTimeline(data) {
     .domain(["world championships", "european championships"])
     .range(["#1f77b4", "#ff7f0e"]);
 
-  // axes
+  // assi
   svg.append("g")
     .attr("transform", `translate(0,${h - margin.bottom})`)
     .call(d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%Y")));
@@ -150,12 +144,10 @@ export function drawTimeline(data) {
     .call(g => g.selectAll("line").attr("stroke", "#eee7dd"))
     .call(g => g.select(".domain").remove());
 
-  // style axes
   svg.selectAll(".domain").attr("stroke", "#cfc7bb");
   svg.selectAll(".tick line").attr("stroke", "#e6dfd5");
   svg.selectAll(".tick text").attr("fill", "#6f6f6f");
 
-  // title
   const title = state.selected?.Athlete
     ? `FinalScore trend (mean + range) – ${state.selected.Athlete}`
     : "FinalScore trend (mean + range) – global view (filtered)";
@@ -179,7 +171,6 @@ export function drawTimeline(data) {
     .y(d => y(d.mean))
     .curve(d3.curveMonotoneX);
 
-  // padded clip (avoid cutting hover)
   const pad = rHover + 1;
   svg.append("defs").append("clipPath")
     .attr("id", "clipTimeline")
@@ -191,7 +182,6 @@ export function drawTimeline(data) {
 
   const gPlot = svg.append("g").attr("clip-path", "url(#clipTimeline)");
 
-  // bands
   gPlot.selectAll(".band")
     .data(byComp, d => d[0])
     .enter()
@@ -201,7 +191,6 @@ export function drawTimeline(data) {
     .attr("opacity", 0.12)
     .attr("d", d => area(d[1]));
 
-  // lines
   gPlot.selectAll(".compLine")
     .data(byComp.map(([comp, arr]) => ({ comp, arr })), d => d.comp)
     .enter()
@@ -212,7 +201,6 @@ export function drawTimeline(data) {
     .attr("stroke-width", 2.2)
     .attr("d", d => line(d.arr));
 
-  // points
   const pts = gPlot.append("g");
 
   pts.selectAll("circle")
@@ -226,7 +214,7 @@ export function drawTimeline(data) {
     .attr("fill", d => color(d.comp))
     .attr("stroke", "#ffffff")
     .attr("stroke-width", 1.2)
-    .on("mouseover", function (evt, d) {
+    .on("mouseover", function(evt, d) {
       setHighlightedCompetition(d.comp);
       d3.select(this).attr("r", rHover).attr("stroke", "black").attr("stroke-width", 1.2);
 
@@ -240,13 +228,13 @@ export function drawTimeline(data) {
       `, evt);
     })
     .on("mousemove", evt => moveTooltip(evt))
-    .on("mouseout", function () {
+    .on("mouseout", function() {
       setHighlightedCompetition(null);
       d3.select(this).attr("r", r).attr("stroke", "#ffffff").attr("stroke-width", 1.2);
       hideTooltip();
     });
 
-  // labels (not clipped)
+  // labels NOT clipped
   const labelLayer = svg.append("g");
 
   const labels = labelLayer.selectAll("text.eventLabel")
@@ -260,44 +248,22 @@ export function drawTimeline(data) {
     .attr("fill", "#6f6f6f")
     .text(d => shortEvent(d.event));
 
-  // minimal collision avoidance
+  // collision avoid minimale
   const placed = [];
-  labels.each(function (d) {
+  labels.each(function(d) {
     const el = d3.select(this);
     const x0 = x(d.date) + 8;
     let y0 = y(d.mean) + 4;
     for (const p of placed) {
-      const dx = Math.abs(x0 - p.x);
-      const dy = Math.abs(y0 - p.y);
-      if (dx < 40 && dy < 12) y0 += 12;
+      if (Math.abs(x0 - p.x) < 40 && Math.abs(y0 - p.y) < 12) y0 += 12;
     }
     el.attr("y", y0);
     placed.push({ x: x0, y: y0 });
   });
 
-  // legend
-  const legend = svg.append("g")
-    .attr("transform", `translate(${w - margin.right + 10},${margin.top})`);
+  // update legenda HTML (niente SVG)
+  d3.select("#tlLegendLine").text("Line = mean");
+  d3.select("#tlLegendBand").text("Band = min–max");
 
-  const legendItems = ["world championships", "european championships"];
-  legend.selectAll("g")
-    .data(legendItems)
-    .enter()
-    .append("g")
-    .attr("transform", (_, i) => `translate(0,${i * 18})`)
-    .each(function (comp) {
-      const g = d3.select(this);
-      g.append("rect").attr("width", 10).attr("height", 10).attr("fill", color(comp));
-      g.append("text").attr("x", 14).attr("y", 10).text(comp).attr("font-size", 11).attr("fill", "#6f6f6f");
-    });
-
-  legend.append("text")
-    .attr("x", 0)
-    .attr("y", 52)
-    .attr("font-size", 10)
-    .attr("fill", "#6f6f6f")
-    .text("Band = min–max • Line = mean");
-
-  // apply current highlight if any
   setHighlightedCompetition(state.highlighted?.Competition ?? null);
 }

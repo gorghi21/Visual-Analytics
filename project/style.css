@@ -102,18 +102,29 @@ select{
 }
 
 .card-header{
-  padding: 8px 12px;        /* ↓ padding */
+  padding: 12px 14px;
   border-bottom: 1px solid var(--stroke);
   background: #fbfaf8;
   flex: 0 0 auto;
+
+  /* layout header: testo a sinistra, legenda a destra */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "title  legend"
+    "note   legend";
+  align-items: start;
+  column-gap: 12px;
 }
 
 .card-title{
+  grid-area: title;
   font-size: 12px;
   font-weight: 650;
 }
 
 .card-note{
+  grid-area: note;
   margin-top: 2px;
   font-size: 10px;
   color: var(--muted);
@@ -168,11 +179,18 @@ svg{
   font-variant-numeric: tabular-nums;
 }
 .legend-scatter{
+  grid-area: legend;
+
   display: flex;
   gap: 14px;
-  margin-top: 6px;
+  margin-top: 0;          /* niente offset in alto */
+
   font-size: 12px;
   color: var(--muted);
+
+  justify-self: end;      /* a destra */
+  align-self: center;     /* centrata verticalmente nell’header */
+  white-space: nowrap;    /* non andare a capo */
 }
 
 .legend-scatter .lg{
@@ -193,3 +211,68 @@ svg{
 .legend-scatter .qY{ background: #2ca02c; }
 .legend-scatter .qN{ background: #d62728; }
 .legend-scatter .qR{ background: #1f77b4; }
+
+.legend-heatmap{
+  grid-area: legend;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  justify-self: end;
+}
+
+.legend-heatmap .legend-label{
+  white-space: nowrap;
+}
+
+.legend-heatmap .legend-bar{
+  width: 120px;
+  height: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--stroke);
+  background: linear-gradient(
+    to right,
+    #f7fcb9,
+    #41b6c4,
+    #081d58
+  );
+}
+
+.legend-heatmap .legend-range{
+  display: flex;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-timeline{
+  grid-area: legend;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--muted);
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.legend-timeline .lg{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-timeline .swatch{
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.legend-timeline .wc{ background:#1f77b4; }
+.legend-timeline .ec{ background:#ff7f0e; }
+
+.legend-timeline .note{
+  margin-left: 6px;
+  font-style: italic;
+}
