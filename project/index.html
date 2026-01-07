@@ -1,0 +1,76 @@
+<!-- index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MAG Performance Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="libs/d3.v7.min.js"></script>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="title">
+      <h1>MAG Performance Dashboard</h1>
+      <div class="subtitle">World & European Championships (2022–2024)</div>
+    </div>
+
+    <div class="filters">
+      <label>Year <select id="yearSelect"></select></label>
+      <label>Apparatus <select id="apparatusSelect"></select></label>
+      <label>Athlete <select id="athleteSelect"></select></label>
+      <label>Nation <select id="nationSelect"></select></label>
+      <label>Qualified <select id="qualifiedSelect"></select></label>
+      <button id="clearSelection" class="btn">Reset selection</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">D vs E Scatter</div>
+        <div class="card-note">Hover = highlight competition • Click = select athlete</div>
+        <div class="legend-scatter">
+          <span class="lg"><span class="dot qY"></span>Qualified</span>
+          <span class="lg"><span class="dot qN"></span>Not qualified</span>
+          <span class="lg"><span class="dot qR"></span>Reserve</span>
+        </div>
+      </div>
+      <svg id="scatter" width="700" height="420"></svg>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">FinalScore Trend</div>
+        <div class="card-note">By competition/event • reacts to selection/brush</div>
+      </div>
+      <svg id="timeline" width="700" height="420"></svg>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Apparatus × Year Heatmap</div>
+        <div class="card-note">Color = Avg FinalScore • Click a cell to filter</div>
+      </div>
+      <svg id="heatmap" width="700" height="420"></svg>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">PCA (DR) – performance similarity</div>
+        <div class="card-note">Brush = filter other views • Click point = select athlete</div>
+      </div>
+      <svg id="pca" width="700" height="420"></svg>
+    </div>
+  </div>
+
+  <div class="footerbar">
+    <div id="stats"></div>
+  </div>
+
+  <div id="tooltip" class="tooltip" style="display:none;"></div>
+  <!-- prima: <script src="main.js"></script> -->
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
