@@ -1,4 +1,4 @@
-// src/charts/timeline.js
+// src/charts/timeline.js  (COMPLETO)
 import { state } from "../state.js";
 import { showTooltip, moveTooltip, hideTooltip, fmt } from "../tooltip.js";
 import { setHighlightedCompetition } from "../highlight.js";
@@ -27,14 +27,11 @@ function getSvgSize(svgSel, fallbackW = 700, fallbackH = 420) {
 }
 
 function parseEventDate(row) {
-  // Preferisci EventDate del dataset (DD/MM/YYYY o YYYY-MM-DD). Fallback su mappa.
   const raw = row?.EventDate;
   if (raw) {
     const s = String(raw).trim();
-    // DD/MM/YYYY
     const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (m) return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
-    // YYYY-MM-DD
     const d = new Date(s);
     if (!Number.isNaN(d.getTime())) return d;
   }
@@ -43,7 +40,7 @@ function parseEventDate(row) {
   for (const k of Object.keys(EVENT_DATE)) {
     if (name.includes(k)) return new Date(EVENT_DATE[k] + "T00:00:00");
   }
-  // fallback: 1 luglio dell'anno
+
   const y = Number(row?.Year);
   return Number.isFinite(y) ? new Date(`${y}-07-01T00:00:00`) : null;
 }
@@ -72,7 +69,8 @@ export function drawTimeline(data) {
 
   const { w, h } = getSvgSize(svg);
 
-  const margin = { top: 30, right: 170, bottom: 45, left: 60 };
+  // margini: più spazio a destra per label/tooltip (es. RIM)
+  const margin = { top: 10, right: 70, bottom: 45, left: 60 };
   const r = 5;
   const rHover = 7;
 
@@ -119,8 +117,13 @@ export function drawTimeline(data) {
     .domain(d3.extent(points, d => d.date))
     .range([margin.left + rHover, w - margin.right - rHover]);
 
+  // y tight + padding: evita grafico "schiacciato"
+  const yMin = d3.min(points, d => d.min);
+  const yMax = d3.max(points, d => d.max);
+  const padY = (yMax - yMin) * 0.10 || 0.5;
+
   const y = d3.scaleLinear()
-    .domain([d3.min(points, d => d.min), d3.max(points, d => d.max)])
+    .domain([yMin - padY, yMax + padY])
     .nice()
     .range([h - margin.bottom - rHover, margin.top + rHover]);
 
@@ -147,16 +150,6 @@ export function drawTimeline(data) {
   svg.selectAll(".domain").attr("stroke", "#cfc7bb");
   svg.selectAll(".tick line").attr("stroke", "#e6dfd5");
   svg.selectAll(".tick text").attr("fill", "#6f6f6f");
-
-  const title = state.selected?.Athlete
-    ? `FinalScore trend (mean + range) – ${state.selected.Athlete}`
-    : "FinalScore trend (mean + range) – global view (filtered)";
-
-  svg.append("text")
-    .attr("x", margin.left)
-    .attr("y", 18)
-    .attr("font-weight", "600")
-    .text(title);
 
   const byComp = d3.groups(points, d => d.comp);
 
@@ -234,36 +227,28 @@ export function drawTimeline(data) {
       hideTooltip();
     });
 
-  // labels NOT clipped
+  // labels: a destra normalmente, ma se vicino al bordo destro vanno a sinistra
   const labelLayer = svg.append("g");
 
-  const labels = labelLayer.selectAll("text.eventLabel")
+  labelLayer.selectAll("text.eventLabel")
     .data(points, d => `${d.comp}|${d.event}`)
     .enter()
     .append("text")
     .attr("class", "eventLabel")
-    .attr("x", d => x(d.date) + 8)
-    .attr("y", d => y(d.mean) + 4)
     .attr("font-size", 10)
     .attr("fill", "#6f6f6f")
-    .text(d => shortEvent(d.event));
-
-  // collision avoid minimale
-  const placed = [];
-  labels.each(function(d) {
-    const el = d3.select(this);
-    const x0 = x(d.date) + 8;
-    let y0 = y(d.mean) + 4;
-    for (const p of placed) {
-      if (Math.abs(x0 - p.x) < 40 && Math.abs(y0 - p.y) < 12) y0 += 12;
-    }
-    el.attr("y", y0);
-    placed.push({ x: x0, y: y0 });
-  });
-
-  // update legenda HTML (niente SVG)
-  d3.select("#tlLegendLine").text("Line = mean");
-  d3.select("#tlLegendBand").text("Band = min–max");
+    .text(d => shortEvent(d.event))
+    .attr("x", d => {
+      const px = x(d.date);
+      const nearRight = px > (w - margin.right - 30);
+      return nearRight ? (px - 8) : (px + 8);
+    })
+    .attr("text-anchor", d => {
+      const px = x(d.date);
+      const nearRight = px > (w - margin.right - 30);
+      return nearRight ? "end" : "start";
+    })
+    .attr("y", d => y(d.mean) + 4);
 
   setHighlightedCompetition(state.highlighted?.Competition ?? null);
 }

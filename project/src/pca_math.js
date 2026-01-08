@@ -19,7 +19,7 @@ function matVec(A, v) {
   return out;
 }
 
-function powerIteration(A, iters = 200) {
+function powerIteration(A, iters = 250) {
   const p = A.length;
   let v = new Array(p).fill(0).map(() => Math.random());
   let nv = norm(v);
@@ -50,22 +50,46 @@ function deflate(A, v, lambda) {
   return out;
 }
 
+/**
+ * Returns:
+ * {
+ *   points: [{... , pc1, pc2}],
+ *   cols, n, mean, sd,
+ *   eigenvalues: [l1, l2],
+ *   explained: [e1, e2],  // fractions
+ *   loadings: { PC1: {col: val}, PC2: {col: val} }
+ * }
+ */
 export function computePCA(data, cols) {
   const d3 = window.d3;
 
   const rows = (data || []).filter(d => cols.every(c => Number.isFinite(d[c])));
   const n = rows.length;
   const p = cols.length;
-  if (n < 2 || p < 2) return [];
 
-  const mu = cols.map(c => d3.mean(rows, r => r[c]));
-  const sd = cols.map(c => {
+  if (n < 2 || p < 2) {
+    return {
+      points: [],
+      cols,
+      n,
+      mean: [],
+      sd: [],
+      eigenvalues: [0, 0],
+      explained: [0, 0],
+      loadings: { PC1: {}, PC2: {} }
+    };
+  }
+
+  const mean = cols.map(c => d3.mean(rows, r => r[c]));
+  const sd = cols.map((c, j) => {
     const v = d3.deviation(rows, r => r[c]);
     return (Number.isFinite(v) && v > 1e-12) ? v : 1;
   });
 
-  const X = rows.map(r => cols.map((c, j) => (r[c] - mu[j]) / sd[j]));
+  // Standardized matrix X (n x p)
+  const X = rows.map(r => cols.map((c, j) => (r[c] - mean[j]) / sd[j]));
 
+  // Covariance matrix C = (X^T X)/(n-1)
   const C = Array.from({ length: p }, () => Array(p).fill(0));
   for (let i = 0; i < n; i++) {
     for (let a = 0; a < p; a++) {
@@ -79,13 +103,32 @@ export function computePCA(data, cols) {
     }
   }
 
-  const v1 = powerIteration(C, 200);
+  // First 2 PCs
+  const v1 = powerIteration(C, 250);
   const l1 = rayleighQuotient(C, v1);
+
   const C2 = deflate(C, v1, l1);
-  const v2 = powerIteration(C2, 200);
+  const v2 = powerIteration(C2, 250);
   const l2 = rayleighQuotient(C2, v2);
 
-  return rows.map((r, i) => ({
+  const eigenvaluesAll = [l1, l2].map(x => (Number.isFinite(x) ? x : 0));
+
+  // Total variance = trace(C)
+  let totalVar = 0;
+  for (let i = 0; i < p; i++) totalVar += C[i][i];
+  totalVar = (Number.isFinite(totalVar) && totalVar > 1e-12) ? totalVar : 1;
+
+  const explained = [
+    eigenvaluesAll[0] / totalVar,
+    eigenvaluesAll[1] / totalVar
+  ].map(x => (Number.isFinite(x) ? Math.max(0, x) : 0));
+
+  const loadings = {
+    PC1: Object.fromEntries(cols.map((c, j) => [c, v1[j]])),
+    PC2: Object.fromEntries(cols.map((c, j) => [c, v2[j]]))
+  };
+
+  const points = rows.map((r, i) => ({
     __id: r.__id,
     Athlete: r.Athlete,
     Nation: r.Nation,
@@ -99,8 +142,17 @@ export function computePCA(data, cols) {
     Escore: r.Escore,
     Penalties: r.Penalties,
     pc1: dot(X[i], v1),
-    pc2: dot(X[i], v2),
-    _eig1: l1,
-    _eig2: l2
+    pc2: dot(X[i], v2)
   }));
+
+  return {
+    points,
+    cols,
+    n,
+    mean,
+    sd,
+    eigenvalues: eigenvaluesAll,
+    explained,
+    loadings
+  };
 }

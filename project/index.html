@@ -1,4 +1,4 @@
-<!-- index.html -->
+<!-- index.html (versione completa corretta) -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -37,7 +37,7 @@
           <span class="lg"><span class="dot qR"></span>Reserve</span>
         </div>
       </div>
-      <svg id="scatter" width="700" height="420"></svg>
+      <svg id="scatter"></svg>
     </div>
 
     <div class="card">
@@ -54,7 +54,7 @@
           <span class="note">Band = min–max • Line = mean</span>
         </div>
       </div>
-      <svg id="timeline" width="700" height="420"></svg>
+      <svg id="timeline"></svg>
     </div>
 
     <div class="card">
@@ -71,15 +71,33 @@
           </div>
         </div>
       </div>
-      <svg id="heatmap" width="700" height="420"></svg>
+      <svg id="heatmap"></svg>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">PCA (DR) – performance similarity</div>
-        <div class="card-note">Brush = filter other views • Click point = select athlete</div>
+    <div class="card card-pca">
+      <div class="card-header pca-header">
+        <div class="pca-header-row">
+          <div>
+            <div class="card-title">PCA (DR) – performance similarity</div>
+            <div class="card-note">Brush = filter other views • Click point = select athlete</div>
+          </div>
+
+          <div class="pca-actions">
+            <label class="pca-toggle-inline">
+              <input type="checkbox" id="pcaOnBrushed" />
+              Recompute on brush
+            </label>
+
+            <button id="pcaInfoBtn" class="pca-info-btn" aria-expanded="false" aria-controls="pcaInfoBox">
+              PCA details
+            </button>
+          </div>
+        </div>
+
+        <div id="pcaInfoBox" class="pca-info-box" hidden></div>
       </div>
-      <svg id="pca" width="700" height="420"></svg>
+
+      <svg id="pca"></svg>
     </div>
   </div>
 
@@ -88,7 +106,6 @@
   </div>
 
   <div id="tooltip" class="tooltip" style="display:none;"></div>
-  <!-- prima: <script src="main.js"></script> -->
-  <script type="module" src="src/main.js"></script>
+  <script type="module" src="src/main.js?v=999"></script>
 </body>
 </html>

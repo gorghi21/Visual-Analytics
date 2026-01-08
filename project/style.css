@@ -14,17 +14,27 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--ink);
+
   height: 100vh;
-  overflow: hidden; /* <-- fondamentale */
+  overflow: hidden;
+
+  /* LAYOUT CORRETTO: topbar + grid + footer */
+  display: flex;
+  flex-direction: column;
 }
 
+/* =========================
+   TOPBAR
+   ========================= */
 .topbar{
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 24px;
-  padding: 12px 22px;      /* ↓ padding */
-  height: 70px;            /* altezza fissa */
+  padding: 12px 22px;
+  height: 70px;
+  flex: 0 0 70px;
+
   border-bottom: 1px solid var(--stroke);
   background: rgba(255,255,255,0.45);
   backdrop-filter: blur(6px);
@@ -77,19 +87,30 @@ select{
 }
 .btn:hover{ box-shadow: var(--shadow); }
 
+/* =========================
+   GRID (occupa tutto lo spazio residuo)
+   ========================= */
 .grid{
-  padding: 12px 22px;                     /* ↓ padding */
+  padding: 12px 22px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;             /* 2×2 fissi */
+  grid-template-rows: 1fr 1fr;
   gap: 12px;
-  height: calc(100vh - 70px - 36px);       /* viewport - topbar - footer */
+
+  flex: 1 1 auto;
+  min-height: 0;          /* evita spazio fantasma/overflow */
 }
 
 @media (max-width: 1100px){
-  .grid{ grid-template-columns: 1fr; }
+  .grid{
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
 }
 
+/* =========================
+   CARD
+   ========================= */
 .card{
   background: var(--card);
   border: 1px solid var(--stroke);
@@ -98,7 +119,8 @@ select{
   overflow: hidden;
 
   display: flex;
-  flex-direction: column; /* <-- necessario */
+  flex-direction: column;
+  min-height: 0;          /* fondamentale per flex */
 }
 
 .card-header{
@@ -107,7 +129,7 @@ select{
   background: #fbfaf8;
   flex: 0 0 auto;
 
-  /* layout header: testo a sinistra, legenda a destra */
+  /* header standard: testo a sx, legenda a dx */
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-areas:
@@ -130,24 +152,57 @@ select{
   color: var(--muted);
 }
 
+/* SVG deve riempire sempre lo spazio residuo della card */
 svg{
   display: block;
   width: 100%;
-  flex: 1 1 auto;   /* <-- prende tutto lo spazio disponibile */
+  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
+/* =========================
+   FOOTER
+   ========================= */
 .footerbar{
   padding: 6px 22px;
+  flex: 0 0 36px;
   height: 36px;
   color: var(--muted);
   font-size: 12px;
+  overflow: hidden;
 }
 
+#stats{
+  font-size: 13px;
+  line-height: 1.45;
+  color: #1f1f1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#stats .stats-metric{
+  display: inline-block;
+  margin-right: 14px;
+}
+#stats b{
+  color:#000;
+  font-weight:600;
+}
+
+/* =========================
+   TOOLTIP
+   ========================= */
 .tooltip{
   position: fixed;
   z-index: 9999;
   pointer-events: none;
-  max-width: 320px;
+
+  /* CHIAVE: mai più largo della viewport */
+  max-width: min(340px, calc(100vw - 24px));
+  width: max-content;
+  white-space: normal;
+  overflow-wrap: anywhere;
 
   background: rgba(255,255,255,0.96);
   border: 1px solid #d9d2c7;
@@ -160,54 +215,32 @@ svg{
   line-height: 1.35;
 }
 
-.tooltip .t-title{
-  font-weight: 650;
-  margin-bottom: 6px;
-}
+.tooltip .t-title{ font-weight: 650; margin-bottom: 6px; }
+.tooltip .t-row{ display: flex; justify-content: space-between; gap: 12px; }
+.tooltip .t-key{ color: #6f6f6f; }
+.tooltip .t-val{ font-variant-numeric: tabular-nums; }
 
-.tooltip .t-row{
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.tooltip .t-key{
-  color: #6f6f6f;
-}
-
-.tooltip .t-val{
-  font-variant-numeric: tabular-nums;
-}
+/* =========================
+   LEGENDS
+   ========================= */
 .legend-scatter{
   grid-area: legend;
-
   display: flex;
   gap: 14px;
-  margin-top: 0;          /* niente offset in alto */
+  margin-top: 0;
 
   font-size: 12px;
   color: var(--muted);
 
-  justify-self: end;      /* a destra */
-  align-self: center;     /* centrata verticalmente nell’header */
-  white-space: nowrap;    /* non andare a capo */
+  justify-self: end;
+  align-self: center;
+  white-space: nowrap;
 }
-
-.legend-scatter .lg{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
+.legend-scatter .lg{ display: inline-flex; align-items: center; gap: 6px; }
 .legend-scatter .dot{
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  display: inline-block;
-  border: 1px solid var(--stroke);
+  width: 9px; height: 9px; border-radius: 50%;
+  display: inline-block; border: 1px solid var(--stroke);
 }
-
-/* IDENTICI ai colori dello scatter */
 .legend-scatter .qY{ background: #2ca02c; }
 .legend-scatter .qN{ background: #d62728; }
 .legend-scatter .qR{ background: #1f77b4; }
@@ -221,24 +254,14 @@ svg{
   color: var(--muted);
   justify-self: end;
 }
-
-.legend-heatmap .legend-label{
-  white-space: nowrap;
-}
-
+.legend-heatmap .legend-label{ white-space: nowrap; }
 .legend-heatmap .legend-bar{
   width: 120px;
   height: 10px;
   border-radius: 6px;
   border: 1px solid var(--stroke);
-  background: linear-gradient(
-    to right,
-    #f7fcb9,
-    #41b6c4,
-    #081d58
-  );
+  background: linear-gradient(to right, #f7fcb9, #41b6c4, #081d58);
 }
-
 .legend-heatmap .legend-range{
   display: flex;
   gap: 6px;
@@ -255,24 +278,104 @@ svg{
   justify-self: end;
   white-space: nowrap;
 }
+.legend-timeline .lg{ display: inline-flex; align-items: center; gap: 6px; }
+.legend-timeline .swatch{
+  width: 10px; height: 10px; border-radius: 2px; display: inline-block;
+}
+.legend-timeline .wc{ background:#1f77b4; }
+.legend-timeline .ec{ background:#ff7f0e; }
+.legend-timeline .note{ margin-left: 6px; font-style: italic; }
 
-.legend-timeline .lg{
+/* =========================
+   PCA HEADER + POPUP OVERLAY
+   ========================= */
+
+/* aggiungi class="card card-pca" alla card PCA */
+.card.card-pca{
+  position: relative;   /* riferimento per overlay */
+}
+
+.card-header.pca-header{
+  display: block;       /* disattiva grid header standard */
+  grid-template-columns: none;
+  grid-template-areas: none;
+}
+
+.pca-header-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.pca-info-btn{
+  border:1px solid #bbb;
+  background:#f4f4f4;
+  padding:6px 10px;
+  font-size:12px;
+  cursor:pointer;
+  border-radius:6px;
+  flex: 0 0 auto;
+}
+.pca-info-btn:hover{ background:#ececec; }
+
+.pca-toggle{
+  display:block;
+  margin-top:6px;
+  font-size:12px;
+  color: var(--muted);
+}
+
+/* overlay: non spinge il grafico */
+.pca-info-box{
+  position: absolute;
+  top: 54px;                /* sotto la prima riga header */
+  right: 14px;
+  width: min(420px, calc(100% - 28px));
+  max-height: calc(100% - 90px);
+  overflow: auto;
+
+  padding: 10px 12px;
+  border: 1px solid #d0d0d0;
+  background: rgba(250, 250, 250, 0.98);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 50;
+
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.pca-info-box .pca-title{
+  font-weight: 650;
+  margin-bottom: 6px;
+}
+
+.pca-info-box table{
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+}
+
+.pca-info-box th,
+.pca-info-box td{
+  padding: 2px 10px 2px 0;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+.pca-actions{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pca-toggle-inline{
   display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-
-.legend-timeline .swatch{
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  display: inline-block;
-}
-
-.legend-timeline .wc{ background:#1f77b4; }
-.legend-timeline .ec{ background:#ff7f0e; }
-
-.legend-timeline .note{
-  margin-left: 6px;
-  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
+  white-space: nowrap;
 }
