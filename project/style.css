@@ -36,7 +36,7 @@ body{
   flex: 0 0 70px;
 
   border-bottom: 1px solid var(--stroke);
-  background: rgba(255,255,255,0.45);
+  background: #1e1b3a;
   backdrop-filter: blur(6px);
 }
 
@@ -378,4 +378,34 @@ svg{
   color: var(--muted);
   user-select: none;
   white-space: nowrap;
+}
+.left-group{
+  display: flex;
+  align-items: center;
+  gap: 14px;          /* spazio tra logo e titolo */
+}
+
+.brand{
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.brand img{
+  height: 60px;       /* adattato alla topbar */
+  width: auto;
+  object-fit: contain;
+  opacity: 0.75;
+}
+
+.topbar .title h1,
+.topbar .subtitle,
+.topbar label{
+  color: #ffffff;
+}
+
+.topbar select,
+.topbar .btn{
+  background: #ffffff;
+  color: #2b2b2b;
 }
