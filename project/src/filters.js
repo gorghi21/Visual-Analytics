@@ -17,10 +17,10 @@ export function initFilters(rawData, { onChange, onReset }) {
   fillSelect("#qualifiedSelect", ["all", ...Array.from(new Set(rawData.map(d => d.Qualified))).sort()]);
   fillSelect("#athleteSelect", ["all", ...Array.from(new Set(rawData.map(d => d.Athlete))).sort()]);
 
-  window.d3.select("#yearSelect").on("change", e => { state.year = e.target.value; onChange(); });
-  window.d3.select("#apparatusSelect").on("change", e => { state.apparatus = e.target.value; onChange(); });
-  window.d3.select("#nationSelect").on("change", e => { state.nation = e.target.value; onChange(); });
-  window.d3.select("#qualifiedSelect").on("change", e => { state.qualified = e.target.value; onChange(); });
+  window.d3.select("#yearSelect").on("change", e => { state.year = e.target.value; onChange({ selectionOnly: false }); });
+  window.d3.select("#apparatusSelect").on("change", e => { state.apparatus = e.target.value; onChange({ selectionOnly: false }); });
+  window.d3.select("#nationSelect").on("change", e => { state.nation = e.target.value; onChange({ selectionOnly: false }); });
+  window.d3.select("#qualifiedSelect").on("change", e => { state.qualified = e.target.value; onChange({ selectionOnly: false }); });
 
   window.d3.select("#athleteSelect").on("change", e => {
     const v = e.target.value;

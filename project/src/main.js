@@ -6,7 +6,7 @@ import { renderStats } from "./stats.js";
 import { computePCA } from "./pca_math.js";
 
 import { drawScatter } from "./charts/scatter.js";
-import { drawTimeline } from "./charts/timeline.js";
+import { drawTimeline } from "./charts/timeline.js?v=1000";
 import { drawHeatmap } from "./charts/heatmap.js";
 import { drawPCA, applyPCABrushStyles, applyPCASelectionStyles } from "./charts/pca.js";
 import { setHighlightedCompetition } from "./highlight.js";
