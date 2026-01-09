@@ -194,22 +194,46 @@ function updatePcaInfoBox() {
 
   const pca = dataStore.pca;
   if (!pca || !pca.cols) {
-    box.innerHTML = `<div class="pca-title">PCA details</div><div>Not available.</div>`;
+    box.innerHTML = `
+      <div class="pca-title">PCA details</div>
+      <div>Not available.</div>
+    `;
     return;
   }
 
-  const fmtPct = x => Number.isFinite(x) ? `${(x*100).toFixed(1)}%` : "-";
+  const fmtPct = x => Number.isFinite(x) ? `${(x * 100).toFixed(1)}%` : "-";
   const fmtNum = x => Number.isFinite(x) ? x.toFixed(3) : "-";
 
   box.innerHTML = `
     <div class="pca-title">PCA details</div>
-    <div><b>Computed on:</b> ${state.pcaMode === "brushed" ? "brushed subset" : "filtered set"} (n=${pca.n})</div>
-    <div style="margin-top:4px;"><b>Explained variance:</b> PC1 ${fmtPct(pca.explained?.[0])}, PC2 ${fmtPct(pca.explained?.[1])}</div>
 
-    <div style="margin-top:8px;"><b>Loadings</b></div>
+    <div style="margin-bottom:6px; color:#444;">
+      <em>
+        Dimensionality reduction of performance metrics.
+        Points closer together indicate similar overall performance profiles.
+      </em>
+    </div>
+
+    <div style="margin-top:6px;">
+      <b>Computed on:</b>
+      ${state.pcaMode === "brushed" ? "brushed subset" : "filtered set"}
+      (n = ${pca.n})
+    </div>
+
+    <div style="margin-top:6px;">
+      <b>Explained variance:</b>
+      PC1 ${fmtPct(pca.explained?.[0])},
+      PC2 ${fmtPct(pca.explained?.[1])}
+    </div>
+
+    <div style="margin-top:10px;"><b>Loadings</b></div>
     <table>
       <thead>
-        <tr><th>Variable</th><th>PC1</th><th>PC2</th></tr>
+        <tr>
+          <th>Variable</th>
+          <th>PC1</th>
+          <th>PC2</th>
+        </tr>
       </thead>
       <tbody>
         ${pca.cols.map(c => `

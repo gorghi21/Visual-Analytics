@@ -1,3 +1,4 @@
+/* style.css (COMPLETO) */
 :root{
   --bg: #f3f0ea;
   --card: #ffffff;
@@ -14,11 +15,9 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--ink);
-
   height: 100vh;
   overflow: hidden;
 
-  /* LAYOUT CORRETTO: topbar + grid + footer */
   display: flex;
   flex-direction: column;
 }
@@ -40,17 +39,37 @@ body{
   backdrop-filter: blur(6px);
 }
 
+.left-group{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand{
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.brand img{
+  height: 60px;      
+  width: auto;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
 .title h1{
   margin: 0;
   font-size: 20px;
   font-weight: 650;
   letter-spacing: 0.2px;
+  color: #ffffff;
 }
 
 .subtitle{
   margin-top: 4px;
   font-size: 12px;
-  color: var(--muted);
+  color: rgba(255,255,255,0.78);
 }
 
 .filters{
@@ -64,7 +83,7 @@ label{
   display: grid;
   gap: 4px;
   font-size: 12px;
-  color: var(--muted);
+  color: rgba(255,255,255,0.85);
 }
 
 select{
@@ -88,7 +107,7 @@ select{
 .btn:hover{ box-shadow: var(--shadow); }
 
 /* =========================
-   GRID (occupa tutto lo spazio residuo)
+   GRID
    ========================= */
 .grid{
   padding: 12px 22px;
@@ -98,7 +117,7 @@ select{
   gap: 12px;
 
   flex: 1 1 auto;
-  min-height: 0;          /* evita spazio fantasma/overflow */
+  min-height: 0;
 }
 
 @media (max-width: 1100px){
@@ -120,39 +139,38 @@ select{
 
   display: flex;
   flex-direction: column;
-  min-height: 0;          /* fondamentale per flex */
+  min-height: 0;
 }
 
+/* Header: testo a sx, legenda al centro (auto), info a dx */
 .card-header{
   padding: 12px 14px;
   border-bottom: 1px solid var(--stroke);
   background: #fbfaf8;
   flex: 0 0 auto;
 
-  /* header standard: testo a sx, legenda a dx */
   display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    "title  legend"
-    "note   legend";
+  grid-template-columns: 1fr auto auto;
   align-items: start;
   column-gap: 12px;
 }
 
+.card-text{
+  min-width: 0;
+}
+
 .card-title{
-  grid-area: title;
   font-size: 12px;
   font-weight: 650;
+  color: var(--ink);
 }
 
 .card-note{
-  grid-area: note;
   margin-top: 2px;
   font-size: 10px;
   color: var(--muted);
 }
 
-/* SVG deve riempire sempre lo spazio residuo della card */
 svg{
   display: block;
   width: 100%;
@@ -181,24 +199,25 @@ svg{
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 #stats .stats-metric{
   display: inline-block;
   margin-right: 14px;
 }
+
 #stats b{
   color:#000;
   font-weight:600;
 }
 
 /* =========================
-   TOOLTIP
+   TOOLTIP (chart tooltip)
    ========================= */
 .tooltip{
   position: fixed;
   z-index: 9999;
   pointer-events: none;
 
-  /* CHIAVE: mai più largo della viewport */
   max-width: min(340px, calc(100vw - 24px));
   width: max-content;
   white-space: normal;
@@ -224,18 +243,15 @@ svg{
    LEGENDS
    ========================= */
 .legend-scatter{
-  grid-area: legend;
   display: flex;
   gap: 14px;
   margin-top: 0;
-
   font-size: 12px;
   color: var(--muted);
-
-  justify-self: end;
-  align-self: center;
   white-space: nowrap;
+  align-self: center;
 }
+
 .legend-scatter .lg{ display: inline-flex; align-items: center; gap: 6px; }
 .legend-scatter .dot{
   width: 9px; height: 9px; border-radius: 50%;
@@ -246,14 +262,15 @@ svg{
 .legend-scatter .qR{ background: #1f77b4; }
 
 .legend-heatmap{
-  grid-area: legend;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 11px;
   color: var(--muted);
-  justify-self: end;
+  white-space: nowrap;
+  align-self: center;
 }
+
 .legend-heatmap .legend-label{ white-space: nowrap; }
 .legend-heatmap .legend-bar{
   width: 120px;
@@ -269,34 +286,82 @@ svg{
 }
 
 .legend-timeline{
-  grid-area: legend;
   display: flex;
   align-items: center;
   gap: 14px;
   font-size: 11px;
   color: var(--muted);
-  justify-self: end;
   white-space: nowrap;
+  align-self: center;
 }
+
 .legend-timeline .lg{ display: inline-flex; align-items: center; gap: 6px; }
 .legend-timeline .swatch{
   width: 10px; height: 10px; border-radius: 2px; display: inline-block;
 }
 .legend-timeline .wc{ background:#1f77b4; }
 .legend-timeline .ec{ background:#ff7f0e; }
-.legend-timeline .note{ margin-left: 6px; font-style: italic; }
+
+/* =========================
+   INFO "i" tooltip (header)
+   ========================= */
+.info-wrap{
+  position: relative;
+  align-self: center;
+  justify-self: end;
+}
+
+.info-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--stroke);
+
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: default;
+  background: #fff;
+}
+
+.info-tip{
+  position: absolute;
+  top: 26px;
+  right: 0;
+
+  width: 260px;
+  padding: 8px 10px;
+
+  background: #ffffff;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 100;
+}
+
+.info-wrap:hover .info-tip{
+  opacity: 1;
+}
 
 /* =========================
    PCA HEADER + POPUP OVERLAY
    ========================= */
-
-/* aggiungi class="card card-pca" alla card PCA */
-.card.card-pca{
-  position: relative;   /* riferimento per overlay */
-}
+.card.card-pca{ position: relative; }
 
 .card-header.pca-header{
-  display: block;       /* disattiva grid header standard */
+  display: block;
   grid-template-columns: none;
   grid-template-areas: none;
 }
@@ -306,6 +371,22 @@ svg{
   align-items:flex-start;
   justify-content:space-between;
   gap:12px;
+}
+
+.pca-actions{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pca-toggle-inline{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
+  white-space: nowrap;
 }
 
 .pca-info-btn{
@@ -319,17 +400,9 @@ svg{
 }
 .pca-info-btn:hover{ background:#ececec; }
 
-.pca-toggle{
-  display:block;
-  margin-top:6px;
-  font-size:12px;
-  color: var(--muted);
-}
-
-/* overlay: non spinge il grafico */
 .pca-info-box{
   position: absolute;
-  top: 54px;                /* sotto la prima riga header */
+  top: 54px;
   right: 14px;
   width: min(420px, calc(100% - 28px));
   max-height: calc(100% - 90px);
@@ -363,49 +436,4 @@ svg{
   padding: 2px 10px 2px 0;
   text-align: left;
   font-variant-numeric: tabular-nums;
-}
-.pca-actions{
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pca-toggle-inline{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--muted);
-  user-select: none;
-  white-space: nowrap;
-}
-.left-group{
-  display: flex;
-  align-items: center;
-  gap: 14px;          /* spazio tra logo e titolo */
-}
-
-.brand{
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-}
-
-.brand img{
-  height: 60px;       /* adattato alla topbar */
-  width: auto;
-  object-fit: contain;
-  opacity: 0.75;
-}
-
-.topbar .title h1,
-.topbar .subtitle,
-.topbar label{
-  color: #ffffff;
-}
-
-.topbar select,
-.topbar .btn{
-  background: #ffffff;
-  color: #2b2b2b;
 }

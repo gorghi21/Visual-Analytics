@@ -1,4 +1,4 @@
-<!-- index.html (versione completa corretta) -->
+<!-- index.html (COMPLETO) -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -33,40 +33,62 @@
   </div>
 
   <div class="grid">
+    <!-- SCATTER -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">D vs E Scatter</div>
-        <div class="card-note">Hover = highlight competition • Click = select athlete</div>
+        <div class="card-text">
+          <div class="card-title">D vs E Scatter</div>
+          <div class="card-note">Hover = highlight competition • Click = select athlete</div>
+        </div>
+
         <div class="legend-scatter">
           <span class="lg"><span class="dot qY"></span>Qualified</span>
           <span class="lg"><span class="dot qN"></span>Not qualified</span>
           <span class="lg"><span class="dot qR"></span>Reserve</span>
         </div>
+
+        <div class="info-wrap">
+          <span class="info-btn" aria-label="Info">i</span>
+          <div class="info-tip">
+            Scatter plot showing the relationship between Difficulty (D) and Execution (E).
+            Points represent performances; color encodes qualification status.
+          </div>
+        </div>
       </div>
       <svg id="scatter"></svg>
     </div>
 
+    <!-- TIMELINE -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">FinalScore Trend</div>
-        <div class="card-note">By competition/event • reacts to selection/brush</div>
+        <div class="card-text">
+          <div class="card-title">FinalScore Trend</div>
+          <div class="card-note">By competition/event • reacts to selection/brush</div>
+        </div>
+
         <div class="legend-timeline">
-          <span class="lg">
-            <span class="swatch wc"></span> World Championships
-          </span>
-          <span class="lg">
-            <span class="swatch ec"></span> European Championships
-          </span>
-          <span class="note">Band = min–max • Line = mean</span>
+          <span class="lg"><span class="swatch wc"></span> World Championships</span>
+          <span class="lg"><span class="swatch ec"></span> European Championships</span>
+        </div>
+
+        <div class="info-wrap">
+          <span class="info-btn" aria-label="Info">i</span>
+          <div class="info-tip">
+            Dot/interval view: dots show average FinalScore per event, vertical intervals show min–max variability.
+            Colors distinguish competition type.
+          </div>
         </div>
       </div>
       <svg id="timeline"></svg>
     </div>
 
+    <!-- HEATMAP -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Apparatus × Year Heatmap</div>
-        <div class="card-note">Color = Avg FinalScore • Click a cell to filter</div>
+        <div class="card-text">
+          <div class="card-title">Apparatus × Year Heatmap</div>
+          <div class="card-note">Color = Avg FinalScore • Click a cell to filter</div>
+        </div>
 
         <div class="legend-heatmap">
           <span class="legend-label">Avg FinalScore</span>
@@ -76,10 +98,19 @@
             <span id="hmMax">–</span>
           </div>
         </div>
+
+        <div class="info-wrap">
+          <span class="info-btn" aria-label="Info">i</span>
+          <div class="info-tip">
+            Aggregated view: each cell encodes the mean FinalScore for a given apparatus and year.
+            Useful to spot systematic differences across apparatus and seasons.
+          </div>
+        </div>
       </div>
       <svg id="heatmap"></svg>
     </div>
 
+    <!-- PCA -->
     <div class="card card-pca">
       <div class="card-header pca-header">
         <div class="pca-header-row">
