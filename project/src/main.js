@@ -81,14 +81,16 @@ function updateAll() {
 
   // overview (heatmap = solo filtri globali)
   drawHeatmap(dataStore.filteredData, {
-    onPickCell: ({ year, apparatus }) => {
+    mode: "year_event",
+    onPickCell: ({ year, event, apparatus }) => {
+      // qui decidi cosa fare: puoi filtrare year+apparatus, oppure aggiungere anche event
       state.year = year;
       state.apparatus = apparatus;
+      // se hai un filtro event, imposta anche quello:
+      // state.event = event;
 
-      // sync UI (usa window.d3 perché d3 non è importato)
       window.d3.select("#yearSelect").property("value", year);
       window.d3.select("#apparatusSelect").property("value", apparatus);
-
       updateAll();
     }
   });
